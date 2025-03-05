@@ -1,0 +1,40 @@
+#these lines of codes below was used to perform a path analysis on the causal relationship between exogeneous and endogeneous variables on the factors affect or influencing depression among students in Nigerian Tertiary institutions.
+#it is aimed at understanding the magnitude of the direct, indirect and total effects these factors have on depression presence.
+
+#set Working Directory
+setwd("C:/Users/Omotayo/Documents/Snow/")
+
+#Load the required Libraries
+library(lavaan)
+library(semPlot)
+library(foreign)
+library(car)
+
+#Impute data gotten from the correlation matrix carried out earlier on the raw data obtained by survey
+Data.cov <- lav_matrix_lower2full(c(88.56,4.026,7.157,41.399,4.68,142.226,20.342,7.573,32.513,41.284,-24.918,-2.909,-23.646,-7.986,78.215))
+rownames(Data.cov) = colnames(Data.cov) = c("Dep", "SRS", "Bullying", "Alcohol", "Academic")
+
+#Create the Structural Equation Model
+modelnew = ' 
+Dep ~ a*SRS + b*Bullying + c*Alcohol + d*Academic
+  SRS ~ e*Bullying + f*Alcohol + g*Academic
+  Bullying ~ h*Alcohol + i*Academic
+  Alcohol ~ j*Academic
+  AcadEff := (j*h*e*a) + (i*e*a) + (i*b) + (i*b) + (g*a) + d
+  AlcEff  := (h*e*a) + (h*b) +(f*a) + c
+  BulEff  := (e*a) + b
+  AcadEffInd := (j*h*e*a) + (i*e*a) + (i*b) + (i*b) + (g*a) 
+  AlcEffInd  := (h*e*a) + (h*b) +(f*a) 
+BulEffInd  := (e*a) 
+SRS := (a)'
+
+modelnew
+
+#fit the model
+modelnew.fit= sem(modelnew, sample.cov = Data.corr, sample.nobs = 444)
+
+#get the results
+summary(modelnew.fit, rsquare = TRUE ,standardized = TRUE, fit.measures= TRUE)
+
+#get the Paths Visualization
+semPaths(modelnew.fit, whatLabels= "par", layout = "spring")
